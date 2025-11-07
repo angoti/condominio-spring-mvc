@@ -1085,7 +1085,6 @@ List<Apartamento> findByTipoOcupacao(String tipo);  // Simples e legível
 
 <table><tbody><tr><td><p style="text-align:center;"><strong>Ação</strong></p></td><td><p style="text-align:center;"><strong>Requisição</strong></p></td><td><p style="text-align:center;"><strong>URL</strong></p></td><td><p style="text-align:center;"><strong>Mapeamento</strong></p></td><td><p style="text-align:center;"><strong>Template Thymeleaf</strong></p></td></tr><tr><td>Gravar dados novo proprietário&nbsp;</td><td>POST</td><td>http://localhost:8080/cad-prop</td><td>@PostMapping(“cad-prop”)</td><td>rel_prop.html</td></tr><tr><td>Relatório proprietários</td><td>GET</td><td>http://localhost:8080/rel-prop</td><td>@GetMapping(“rel-prop”)</td><td>rel_prop.html</td></tr><tr><td>Gravar dados novo apartamento</td><td>POST</td><td>http://localhost:8080/cad-apto</td><td>@PostMapping(“cad-apto”)</td><td>rel_apto.html</td></tr><tr><td>Relatório apartamentos</td><td>GET</td><td>http://localhost:8080/rel-apto</td><td>@GetMapping(“rel-apto”)</td><td>rel_apto.html</td></tr></tbody></table>
 
-###   
 6.3. Implementação do ProprietarioController
 
 **Arquivo:** `src/main/java/com/professorangoti/condominio/controller/ProprietarioController.java`
@@ -1149,24 +1148,4 @@ spring.thymeleaf.cache=false
 spring.devtools.livereload.enabled=true
 spring.devtools.restart.enabled=true
 spring.devtools.restart.additional-paths=src/main/resources/templates,src/main/resources/static
-```
-
-```java
-@PostMapping("/cad_prop")
-public String gravaNovoProprietario(@Valid Proprietario proprietario,
-                                    BindingResult result) {
-    if (result.hasErrors()) {
-        return "form_prop";  // Retorna ao formulário com erros
-    }
-    repository.save(proprietario);  // Salva no banco
-    return "redirect:/rel_prop";     // Redireciona para o relatório
-}
-```
-
-```java
-@GetMapping("/cad_prop")
-public String formCadastroProprietario(Model model) {
-    model.addAttribute("proprietario", new Proprietario());
-    return "form_prop";  // Retorna nome do template
-}
 ```
