@@ -1128,7 +1128,7 @@ Arquivo src\\main\\resources\\application.properties
 
 ```
 # H2 Database Configuration
-spring.datasource.url=jdbc:h2:file:./data/torresmo
+spring.datasource.url=jdbc:h2:file:./data/condominio
 spring.datasource.driverClassName=org.h2.Driver
 spring.datasource.username=sa
 spring.datasource.password=
