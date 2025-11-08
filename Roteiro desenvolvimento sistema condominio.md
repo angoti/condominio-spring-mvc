@@ -245,21 +245,21 @@ public class Apartamento {
 
 #### Anotações de Classe
 
-*   `**@Entity**`: Marca a classe como uma entidade JPA (será mapeada para tabela)
-*   `**@Table(name = "...")**`: Define o nome da tabela no banco de dados
-*   `**@Data**` (Lombok): Gera getters, setters, toString(), equals() e hashCode()
-*   `**@NoArgsConstructor**` (Lombok): Gera construtor vazio (exigido pelo JPA)
-*   `**@AllArgsConstructor**` (Lombok): Gera construtor com todos os atributos
+*   **@Entity**: Marca a classe como uma entidade JPA (será mapeada para tabela)
+*   **@Table(name = "...")**: Define o nome da tabela no banco de dados
+*   **@Data** (Lombok): Gera getters, setters, toString(), equals() e hashCode()
+*   **@NoArgsConstructor** (Lombok): Gera construtor vazio (exigido pelo JPA)
+*   **@AllArgsConstructor** (Lombok): Gera construtor com todos os atributos
 
 #### Anotações de Atributo
 
-*   `**@Id**`: Marca o atributo como chave primária
-*   `**@GeneratedValue**`: Define estratégia de geração automática do ID
+*   **@Id**: Marca o atributo como chave primária
+*   **@GeneratedValue**: Define estratégia de geração automática do ID
     *   `IDENTITY`: Usa auto-increment do banco (ideal para H2, MySQL, PostgreSQL)
     *   `SEQUENCE`: Usa sequences (Oracle, PostgreSQL)
     *   `TABLE`: Usa tabela auxiliar
     *   `AUTO`: Deixa o provedor JPA decidir
-*   `**@Column**`: Configura detalhes da coluna no banco
+*   **@Column**: Configura detalhes da coluna no banco
     *   `name`: Nome da coluna
     *   `nullable`: Se aceita NULL
     *   `length`: Tamanho máximo (para String)
@@ -267,19 +267,19 @@ public class Apartamento {
 
 #### Anotações de Relacionamento
 
-`**@OneToMany**`: Relacionamento 1 para N (um proprietário → vários apartamentos)
+**@OneToMany**: Relacionamento 1 para N (um proprietário → vários apartamentos)
 
 *   `mappedBy`: Indica qual atributo na outra classe gerencia o relacionamento
 *   `cascade`: Define operações em cascata (ALL, PERSIST, REMOVE, etc.)
 *   `orphanRemoval`: Remove entidades órfãs
 *   `fetch`: LAZY (carrega sob demanda) ou EAGER (carrega imediatamente)
 
-`**@ManyToOne**`: Relacionamento N para 1 (vários apartamentos → um proprietário)
+**@ManyToOne**: Relacionamento N para 1 (vários apartamentos → um proprietário)
 
 *   `fetch`: EAGER (carrega sempre) ou LAZY (carrega sob demanda)
 *   `optional`: Se o relacionamento é opcional (false = obrigatório)
 
-`**@JoinColumn**`: Define a coluna de chave estrangeira
+**@JoinColumn**: Define a coluna de chave estrangeira
 
 *   `name`: Nome da coluna FK
 *   `nullable`: Se aceita NULL
@@ -287,11 +287,11 @@ public class Apartamento {
 
 #### Anotações de Validação (Bean Validation)
 
-*   `**@NotNull**`: Valor não pode ser null
-*   `**@NotBlank**`: String não pode ser null, vazia ou apenas espaços
-*   `**@Size**`: Define tamanho mínimo/máximo
-*   `**@Min**` **/** `**@Max**`: Valor mínimo/máximo para números
-*   `**@Pattern**`: Valida contra expressão regular
+*   **@NotNull**: Valor não pode ser null
+*   **@NotBlank**: String não pode ser null, vazia ou apenas espaços
+*   **@Size**: Define tamanho mínimo/máximo
+*   **@Min** **/** **@Max**: Valor mínimo/máximo para números
+*   **@Pattern**: Valida contra expressão regular
 
 ### 3.6. Diagrama de Classes JPA
 
@@ -609,7 +609,7 @@ PagingAndSortingRepository<T, ID>    (+ Paginação e ordenação)
 JpaRepository<T, ID>                 (+ Métodos específicos JPA)
 ```
 
-**Usaremos** `**JpaRepository**` pois é a mais completa e oferece todos os recursos necessários.
+**Usaremos** **JpaRepository** pois é a mais completa e oferece todos os recursos necessários.
 
 ### 5.3. Implementação do ProprietarioRepository
 
@@ -1106,14 +1106,14 @@ List<Apartamento> findByTipoOcupacao(String tipo);  // Simples e legível
 
 #### Anotações de Classe
 
-*   `**@Controller**`: Marca a classe como um controller Spring MVC
-*   `**@RequestMapping("/prefixo")**`: Define prefixo para todas as URLs do controller
+*   **@Controller**: Marca a classe como um controller Spring MVC
+*   **@RequestMapping("/prefixo")**: Define prefixo para todas as URLs do controller
 
 #### Anotações de Método
 
-*   `**@GetMapping("/path")**`: Atende requisições GET
-*   `**@PostMapping("/path")**`: Atende requisições POST
-*   `**@PathVariable("nome")**`: Captura valor da URL (`/editar/{id}`)
+*   **@GetMapping("/path")**: Atende requisições GET
+*   **@PostMapping("/path")**: Atende requisições POST
+*   **@PathVariable("nome")**: Captura valor da URL (`/editar/{id}`)
 
 ## 7\. Implementação das views
 
