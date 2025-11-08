@@ -738,8 +738,7 @@ public interface ProprietarioRepository extends JpaRepository<Proprietario, Long
      *
      * Usa SQL nativo (nativeQuery = true).
      */
-    @Query("SELECT COUNT(*) FROM apartamento WHERE proprietario_id = :proprietarioId",
-           nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM apartamento WHERE proprietario_id = :proprietarioId", nativeQuery = true)
     long countApartamentosByProprietarioId(@Param("proprietarioId") Long proprietarioId);
 
 
