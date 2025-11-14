@@ -33,12 +33,66 @@ As classes de modelo representam as **entidades** do nosso domínio de negócio 
 *   **Manutenibilidade**: Código mais limpo e fácil de entender
 *   **Relacionamentos**: Gerenciamento automático de relacionamentos entre entidades
 
-### 3.2. Estrutura do Projeto
+### 3.2. Lombok e JPA
 
-Organize suas classes no pacote:
+A anotação @Data do Lombok é amplamente usada para gerar automaticamente métodos getters, setters, toString, equals e hashCode. Quando utilizada em classes que fazem uso do ORM Hibernate, algumas considerações e boas práticas devem ser levadas em conta para evitar problemas.
 
+#### 3.2.1. Métodos equals e hashCode
+
+O Hibernate usa os métodos equals e hashCode para identificar entidades e gerenciar seu estado. Usar os IDs de banco de dados gerados automaticamente (@Id com @GeneratedValue) nesses métodos pode causar problemas, especialmente antes de a entidade ser persistida e receber um ID. É comum sobrescrever esses métodos para utilizar atributos naturais e imutáveis.
+
+#### 3.2.2. Lazy Loading
+
+Em relacionamentos @OneToMany ou @ManyToMany, especialmente se o fetch type for LAZY, os métodos toString, equals e hashCode podem acionar carregamento (lazy loading) não intencional de coleções, levando a problemas de desempenho ou exceções LazyInitializationException.
+
+#### 3.2.3. Anotações específicas de Lombok
+
+Para evitar os problemas mencionados acima, utilize anotações específicas do Lombok:
+
+* **@ToString(exclude = {"apartamentos"})**: Exclui coleções do método toString para evitar lazy loading não intencional e recursão infinita em relacionamentos bidirecionais.
+
+* **@EqualsAndHashCode(of = {"email"})** ou **@EqualsAndHashCode(exclude = {"apartamentos"})**: Define explicitamente quais atributos devem ser usados nos métodos equals e hashCode. Prefira usar atributos de negócio únicos e imutáveis (como email, CPF) em vez do ID gerado automaticamente.
+
+**Exemplo de uso correto:**
+
+```java
+@Data
+@ToString(exclude = {"apartamentos"})
+@EqualsAndHashCode(of = {"telefone"})
+@Entity
+public class Proprietario {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private String nome;
+    private String telefone; // Usado para equals/hashCode
+    
+    @OneToMany(mappedBy = "proprietario", fetch = FetchType.LAZY)
+    private List<Apartamento> apartamentos; // Excluído do toString
+}
 ```
-src/main/java/com/professorangoti/condominio/model/
+
+**Importante:** Sempre teste suas entidades para garantir que equals, hashCode e toString funcionem corretamente antes e depois da persistência.
+
+Exemplo
+
+```java
+@Data
+@NoArgsConstructor
+@ToString(exclude = { "senha", "telefones" })
+@EqualsAndHashCode(of = { "email" })
+@Entity
+public class Usuario {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String nome;    
+    private String email;
+    private String senha;
+    private List<telefone> telefones = new ArrayList<Telefone>;
+}
 ```
 
 ### 3.3. Implementação da Entidade Proprietario
@@ -48,95 +102,90 @@ src/main/java/com/professorangoti/condominio/model/
 ```java
 package com.professorangoti.condominio.model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * Entidade JPA que representa um proprietário no sistema de condomínio.
  * Um proprietário pode possuir múltiplos apartamentos (relacionamento 1:N).
  */
+@Data
+@ToString(exclude = { "apartamentos" })
+@EqualsAndHashCode(of = { "telefone" })
 @Entity
 @Table(name = "proprietario")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Proprietario {
 
-    /**
-     * Chave primária gerada automaticamente pelo banco de dados.
-     * A estratégia IDENTITY é ideal para H2, MySQL e PostgreSQL.
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_proprietario")
-    private Long id;
+  /**
+   * Chave primária gerada automaticamente pelo banco de dados.
+   * A estratégia IDENTITY é ideal para H2, MySQL e PostgreSQL.
+   */
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "id_proprietario")
+  private Long id;
 
-    /**
-     * Nome do proprietário.
-     * Validações:
-     * - Não pode ser nulo ou vazio
-     * - Deve ter entre 3 e 100 caracteres
-     */
-    @NotBlank(message = "O nome do proprietário é obrigatório")
-    @Size(min = 3, max = 100, message = "O nome deve ter entre 3 e 100 caracteres")
-    @Column(nullable = false, length = 100)
-    private String nome;
+  /**
+   * Nome do proprietário.
+   * Validações:
+   * - Não pode ser nulo ou vazio
+   * - Deve ter entre 3 e 100 caracteres
+   */
+  @Column(nullable = false, length = 100)
+  private String nome;
 
-    /**
-     * Telefone de contato do proprietário.
-     * Validações:
-     * - Não pode ser nulo ou vazio
-     * - Deve seguir padrão brasileiro: (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
-     */
-    @NotBlank(message = "O telefone é obrigatório")
-    @Pattern(
-        regexp = "\\(\\d{2}\\)\\s?\\d{4,5}-\\d{4}",
-        message = "Telefone deve estar no formato (XX) XXXXX-XXXX"
-    )
-    @Column(nullable = false, length = 20)
-    private String telefone;
+  /**
+   * Telefone de contato do proprietário.
+   * Validações:
+   * - Não pode ser nulo ou vazio
+   * - Deve seguir padrão brasileiro: (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
+   */
+  @Column(nullable = false, length = 20)
+  private String telefone;
 
-    /**
-     * Relacionamento bidirecional 1:N com Apartamento.
-     * Um proprietário pode ter vários apartamentos.
-     *
-     * mappedBy: indica que o relacionamento é gerenciado pelo atributo
-     *           "proprietario" na classe Apartamento
-     * cascade: operações em cascata (salvar proprietário salva apartamentos)
-     * orphanRemoval: remove apartamentos órfãos (sem proprietário)
-     * fetch: LAZY = carrega apartamentos apenas quando acessados
-     */
-    @OneToMany(
-        mappedBy = "proprietario",
-        cascade = CascadeType.ALL,
-        orphanRemoval = true,
-        fetch = FetchType.LAZY
-    )
-    private List<Apartamento> apartamentos = new ArrayList<>();
+  /**
+   * Relacionamento bidirecional 1:N com Apartamento.
+   * Um proprietário pode ter vários apartamentos.
+   *
+   * mappedBy: indica que o relacionamento é gerenciado pelo atributo
+   * "proprietario" na classe Apartamento
+   * cascade: operações em cascata (salvar proprietário salva apartamentos)
+   * orphanRemoval: remove apartamentos órfãos (sem proprietário)
+   * fetch: LAZY = carrega apartamentos apenas quando acessados
+   */
+  @OneToMany(mappedBy = "proprietario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<Apartamento> apartamentos = new ArrayList<>();
 
-    /**
-     * Método auxiliar para adicionar um apartamento à lista.
-     * Mantém sincronização bidirecional do relacionamento.
-     */
-    public void adicionarApartamento(Apartamento apartamento) {
-        apartamentos.add(apartamento);
-        apartamento.setProprietario(this);
-    }
+  /**
+   * Método auxiliar para adicionar um apartamento à lista.
+   * Mantém sincronização bidirecional do relacionamento.
+   */
+  public void adicionarApartamento(Apartamento apartamento) {
+    apartamentos.add(apartamento);
+    apartamento.setProprietario(this);
+  }
 
-    /**
-     * Método auxiliar para remover um apartamento da lista.
-     * Mantém sincronização bidirecional do relacionamento.
-     */
-    public void removerApartamento(Apartamento apartamento) {
-        apartamentos.remove(apartamento);
-        apartamento.setProprietario(null);
-    }
+  /**
+   * Método auxiliar para remover um apartamento da lista.
+   * Mantém sincronização bidirecional do relacionamento.
+   */
+  public void removerApartamento(Apartamento apartamento) {
+    apartamentos.remove(apartamento);
+    apartamento.setProprietario(null);
+  }
 }
 ```
 
@@ -147,97 +196,80 @@ public class Proprietario {
 ```java
 package com.professorangoti.condominio.model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * Entidade JPA que representa um apartamento no sistema de condomínio.
  * Cada apartamento pertence a exatamente um proprietário (relacionamento N:1).
  */
+@Data
+@ToString(exclude = { "proprietario" })
+@EqualsAndHashCode(of = { "numeroPorta", "proprietario" })
 @Entity
 @Table(name = "apartamento")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Apartamento {
 
-    /**
-     * Chave primária gerada automaticamente.
-     */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_apartamento")
-    private Long id;
+  /**
+   * Chave primária gerada automaticamente.
+   */
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "id_apartamento")
+  private Long id;
 
-    /**
-     * Número da porta do apartamento.
-     * Validações:
-     * - Não pode ser nulo
-     * - Deve ser um número positivo
-     */
-    @NotNull(message = "O número da porta é obrigatório")
-    @Min(value = 1, message = "O número da porta deve ser maior que zero")
-    @Column(name = "numero_porta", nullable = false)
-    private Integer numeroPorta;
+  /**
+   * Número da porta do apartamento.
+   * Validações:
+   * - Não pode ser nulo
+   * - Deve ser um número positivo
+   */
+  @Column(name = "numero_porta", nullable = false)
+  private Integer numeroPorta;
 
-    /**
-     * Quantidade de quartos do apartamento.
-     * Validações:
-     * - Não pode ser nulo
-     * - Deve ser entre 1 e 10
-     */
-    @NotNull(message = "A quantidade de quartos é obrigatória")
-    @Min(value = 1, message = "Deve haver pelo menos 1 quarto")
-    @Max(value = 10, message = "Máximo de 10 quartos permitido")
-    @Column(name = "quantidade_quartos", nullable = false)
-    private Integer quantidadeQuartos;
+  /**
+   * Quantidade de quartos do apartamento.
+   * Validações:
+   * - Não pode ser nulo
+   * - Deve ser entre 1 e 10
+   */
+  @Column(name = "quantidade_quartos", nullable = false)
+  private Integer quantidadeQuartos;
 
-    /**
-     * Tipo de ocupação do apartamento.
-     * Valores possíveis: "Proprietário", "Inquilino", "Vazio"
-     *
-     * Nota: Em um cenário real, seria melhor usar um Enum.
-     * Aqui mantemos String por simplicidade didática.
-     */
-    @NotBlank(message = "O tipo de ocupação é obrigatório")
-    @Pattern(
-        regexp = "Proprietário|Inquilino|Vazio",
-        message = "Tipo de ocupação deve ser: Proprietário, Inquilino ou Vazio"
-    )
-    @Column(name = "tipo_ocupacao", nullable = false, length = 20)
-    private String tipoOcupacao;
+  /**
+   * Tipo de ocupação do apartamento.
+   * Valores possíveis: "Proprietário", "Inquilino", "Vazio"
+   *
+   * Nota: Em um cenário real, seria melhor usar um Enum.
+   * Aqui mantemos String por simplicidade didática.
+   */
+  @Column(name = "tipo_ocupacao", nullable = false, length = 20)
+  private String tipoOcupacao;
 
-    /**
-     * Relacionamento N:1 com Proprietario.
-     * Vários apartamentos pertencem a um proprietário.
-     *
-     * fetch: EAGER = sempre carrega o proprietário junto com o apartamento
-     * optional: false = todo apartamento DEVE ter um proprietário
-     *
-     * @JoinColumn especifica o nome da coluna de chave estrangeira
-     */
-    @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(
-        name = "proprietario_id",
-        nullable = false,
-        foreignKey = @ForeignKey(name = "fk_apartamento_proprietario")
-    )
-    @NotNull(message = "O proprietário é obrigatório")
-    private Proprietario proprietario;
+  /**
+   * Relacionamento N:1 com Proprietario.
+   * Vários apartamentos pertencem a um proprietário.
+   *
+   * fetch: EAGER = sempre carrega o proprietário junto com o apartamento
+   * optional: false = todo apartamento DEVE ter um proprietário
+   *
+   * @JoinColumn especifica o nome da coluna de chave estrangeira
+   */
+  @ManyToOne(fetch = FetchType.EAGER, optional = false)
+  @JoinColumn(name = "proprietario_id", nullable = false, foreignKey = @ForeignKey(name = "fk_apartamento_proprietario"))
+  private Proprietario proprietario;
 
-    /**
-     * Construtor auxiliar sem o ID (útil para criação de novos apartamentos).
-     */
-    public Apartamento(Integer numeroPorta, Integer quantidadeQuartos,
-                      String tipoOcupacao, Proprietario proprietario) {
-        this.numeroPorta = numeroPorta;
-        this.quantidadeQuartos = quantidadeQuartos;
-        this.tipoOcupacao = tipoOcupacao;
-        this.proprietario = proprietario;
-    }
 }
 ```
 
